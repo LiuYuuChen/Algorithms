@@ -47,7 +47,7 @@ func Test_HeapFunction(t *testing.T) {
 	}
 }
 
-// Tests Heap.Add and ensures that heap invariant is preserved after adding items.
+// Tests heap.Add and ensures that heap invariant is preserved after adding items.
 func TestHeap_Add(t *testing.T) {
 	handler := priorityHandler{}
 	h := New[string, testHeapObject](&handler)
@@ -77,11 +77,11 @@ func TestHeap_Add(t *testing.T) {
 	}
 }
 
-// TestHeap_Delete tests Heap.Delete and ensures that heap invariant is
+// TestHeap_Delete tests heap.Delete and ensures that heap invariant is
 // preserved after deleting items.
 func TestHeap_Delete(t *testing.T) {
 	handler := priorityHandler{}
-	h := New[string, testHeapObject](&handler)
+	h := newHeap[string, testHeapObject](&handler)
 	h.Add(mkHeapObj("foo", 10))
 	h.Add(mkHeapObj("bar", 1))
 	h.Add(mkHeapObj("bal", 31))
@@ -123,7 +123,7 @@ func TestHeap_Delete(t *testing.T) {
 	}
 }
 
-// TestHeap_Get tests Heap.Get.
+// TestHeap_Get tests heap.Get.
 func TestHeap_Get(t *testing.T) {
 	handler := priorityHandler{}
 	h := New[string, testHeapObject](&handler)
@@ -144,7 +144,7 @@ func TestHeap_Get(t *testing.T) {
 	}
 }
 
-// TestHeap_List tests Heap.List function.
+// TestHeap_List tests heap.List function.
 func TestHeap_List(t *testing.T) {
 	handler := priorityHandler{}
 	h := New[string, testHeapObject](&handler)

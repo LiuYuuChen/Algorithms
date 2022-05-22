@@ -2,7 +2,20 @@ package heap
 
 import (
 	"fmt"
+	"sync"
 )
+
+type options struct {
+	lock sync.Locker
+}
+
+type Option func(opts *options)
+
+func WithLock(lock sync.Locker) Option {
+	return func(opts *options) {
+		opts.lock = lock
+	}
+}
 
 type PriorityHandler[KEY comparable, VALUE any] interface {
 	FormStoreKey(VALUE) KEY
@@ -20,7 +33,7 @@ type data[KEY comparable, VALUE any] struct {
 	priority PriorityHandler[KEY, VALUE]
 }
 
-func newHeap[KEY comparable, VALUE any](priority PriorityHandler[KEY, VALUE]) *data[KEY, VALUE] {
+func newData[KEY comparable, VALUE any](priority PriorityHandler[KEY, VALUE]) *data[KEY, VALUE] {
 	return &data[KEY, VALUE]{
 		items:    make(map[KEY]*heapItem[VALUE]),
 		priority: priority,
@@ -77,13 +90,13 @@ func (h *data[_, VALUE]) Peek() (VALUE, error) {
 	return empty, fmt.Errorf("peek a empty heap")
 }
 
-// Heap is a producer/consumer queue that implements a heap data structure.
+// heap is a producer/consumer queue that implements a heap data structure.
 // It can be used to implement priority queues and similar data structures.
-type Heap[KEY comparable, VALUE any] struct {
+type heap[KEY comparable, VALUE any] struct {
 	data *data[KEY, VALUE]
 }
 
-func (heap *Heap[KEY, VALUE]) Add(value VALUE) {
+func (heap *heap[KEY, VALUE]) Add(value VALUE) {
 	key := heap.data.priority.FormStoreKey(value)
 	if _, exist := heap.data.items[key]; exist {
 		heap.data.items[key].value = value
@@ -94,7 +107,7 @@ func (heap *Heap[KEY, VALUE]) Add(value VALUE) {
 }
 
 // Delete removes an item.
-func (heap *Heap[KEY, VALUE]) Delete(value VALUE) error {
+func (heap *heap[KEY, VALUE]) Delete(value VALUE) error {
 	key := heap.data.priority.FormStoreKey(value)
 	if item, ok := heap.data.items[key]; ok {
 		_, err := Remove[VALUE](heap.data, item.index)
@@ -104,17 +117,17 @@ func (heap *Heap[KEY, VALUE]) Delete(value VALUE) error {
 }
 
 // Peek returns the head of the heap without removing it.
-func (heap *Heap[KEY, VALUE]) Peek() (VALUE, error) {
+func (heap *heap[KEY, VALUE]) Peek() (VALUE, error) {
 	return heap.data.Peek()
 }
 
 // Pop returns the head of the heap and removes it.
-func (heap *Heap[KEY, VALUE]) Pop() (VALUE, error) {
+func (heap *heap[KEY, VALUE]) Pop() (VALUE, error) {
 	return Pop[VALUE](heap.data)
 }
 
 // Get returns the requested item, or sets exists=false.
-func (heap *Heap[KEY, VALUE]) Get(value VALUE) (VALUE, bool) {
+func (heap *heap[KEY, VALUE]) Get(value VALUE) (VALUE, bool) {
 	key := heap.data.priority.FormStoreKey(value)
 	val, ok := heap.data.items[key]
 	if !ok {
@@ -125,7 +138,7 @@ func (heap *Heap[KEY, VALUE]) Get(value VALUE) (VALUE, bool) {
 }
 
 // List returns a list of all the items.
-func (heap *Heap[KEY, VALUE]) List() []VALUE {
+func (heap *heap[KEY, VALUE]) List() []VALUE {
 	list := make([]VALUE, 0, len(heap.data.items))
 	for _, item := range heap.data.items {
 		list = append(list, item.value)
@@ -134,13 +147,30 @@ func (heap *Heap[KEY, VALUE]) List() []VALUE {
 }
 
 // Len returns the number of items in the heap.
-func (heap *Heap[KEY, VALUE]) Len() int {
+func (heap *heap[KEY, VALUE]) Len() int {
 	return len(heap.data.queue)
 }
 
-// New returns a Heap which can be used to queue up items to process.
-func New[KEY comparable, VALUE any](priority PriorityHandler[KEY, VALUE]) *Heap[KEY, VALUE] {
-	return &Heap[KEY, VALUE]{
-		data: newHeap[KEY, VALUE](priority),
+// New returns a heap which can be used to queue up items to process.
+func New[KEY comparable, VALUE any](priority PriorityHandler[KEY, VALUE]) Heap[VALUE] {
+	return newHeap[KEY, VALUE](priority)
+}
+
+func newHeap[KEY comparable, VALUE any](priority PriorityHandler[KEY, VALUE]) *heap[KEY, VALUE] {
+	return &heap[KEY, VALUE]{
+		data: newData[KEY, VALUE](priority),
+	}
+}
+
+func NewConcurrent[VALUE any](priority PriorityHandler[string, VALUE], opts ...Option) Heap[VALUE] {
+	cfg := options{lock: &sync.RWMutex{}}
+	for _, opt := range opts {
+		opt(&cfg)
+	}
+
+	return &currentHeap[VALUE]{
+		data: &concurrentData[VALUE]{
+			lock: cfg.lock,
+		},
 	}
 }

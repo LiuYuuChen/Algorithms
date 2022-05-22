@@ -11,6 +11,16 @@ type Interface[VALUE any] interface {
 	Pop() (VALUE, error)
 }
 
+type Heap[VALUE any] interface {
+	Add(value VALUE)
+	Delete(value VALUE) error
+	Peek() (VALUE, error)
+	Pop() (VALUE, error)
+	Get(value VALUE) (VALUE, bool)
+	List() []VALUE
+	Len() int
+}
+
 func BuildHeap[VALUE any](heap Interface[VALUE]) {
 
 	n := heap.Len()
