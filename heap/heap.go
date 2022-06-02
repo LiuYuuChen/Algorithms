@@ -17,11 +17,6 @@ func WithLock(lock sync.Locker) Option {
 	}
 }
 
-type PriorityHandler[KEY comparable, VALUE any] interface {
-	FormStoreKey(VALUE) KEY
-	Less(VALUE, VALUE) bool
-}
-
 type heapItem[VALUE any] struct {
 	index int
 	value VALUE
@@ -30,10 +25,10 @@ type heapItem[VALUE any] struct {
 type data[KEY comparable, VALUE any] struct {
 	items    map[KEY]*heapItem[VALUE]
 	queue    []KEY
-	priority PriorityHandler[KEY, VALUE]
+	priority Constraint[KEY, VALUE]
 }
 
-func newData[KEY comparable, VALUE any](priority PriorityHandler[KEY, VALUE]) *data[KEY, VALUE] {
+func newData[KEY comparable, VALUE any](priority Constraint[KEY, VALUE]) *data[KEY, VALUE] {
 	return &data[KEY, VALUE]{
 		items:    make(map[KEY]*heapItem[VALUE]),
 		priority: priority,
@@ -152,17 +147,17 @@ func (heap *heap[KEY, VALUE]) Len() int {
 }
 
 // New returns a heap which can be used to queue up items to process.
-func New[KEY comparable, VALUE any](priority PriorityHandler[KEY, VALUE]) Heap[VALUE] {
+func New[KEY comparable, VALUE any](priority Constraint[KEY, VALUE]) Heap[VALUE] {
 	return newHeap[KEY, VALUE](priority)
 }
 
-func newHeap[KEY comparable, VALUE any](priority PriorityHandler[KEY, VALUE]) *heap[KEY, VALUE] {
+func newHeap[KEY comparable, VALUE any](priority Constraint[KEY, VALUE]) *heap[KEY, VALUE] {
 	return &heap[KEY, VALUE]{
 		data: newData[KEY, VALUE](priority),
 	}
 }
 
-func NewConcurrent[VALUE any](priority PriorityHandler[string, VALUE], opts ...Option) Heap[VALUE] {
+func NewConcurrent[VALUE any](priority Constraint[string, VALUE], opts ...Option) Heap[VALUE] {
 	cfg := options{lock: &sync.RWMutex{}}
 	for _, opt := range opts {
 		opt(&cfg)
@@ -170,7 +165,8 @@ func NewConcurrent[VALUE any](priority PriorityHandler[string, VALUE], opts ...O
 
 	return &currentHeap[VALUE]{
 		data: &concurrentData[VALUE]{
-			lock: cfg.lock,
+			lock:     cfg.lock,
+			priority: priority,
 		},
 	}
 }

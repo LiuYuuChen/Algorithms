@@ -72,10 +72,10 @@ type concurrentData[VALUE any] struct {
 	lock     sync.Locker
 	items    cmap.ConcurrentMap[*heapItem[VALUE]]
 	queue    []string
-	priority PriorityHandler[string, VALUE]
+	priority Constraint[string, VALUE]
 }
 
-func newConcurrentData[V any](lock sync.Locker, handler PriorityHandler[string, V]) *concurrentData[V] {
+func newConcurrentData[V any](lock sync.Locker, handler Constraint[string, V]) *concurrentData[V] {
 	if lock == nil {
 		lock = &sync.RWMutex{}
 	}

@@ -21,6 +21,11 @@ type Heap[VALUE any] interface {
 	Len() int
 }
 
+type Constraint[KEY comparable, VALUE any] interface {
+	FormStoreKey(VALUE) KEY
+	Less(VALUE, VALUE) bool
+}
+
 func BuildHeap[VALUE any](heap Interface[VALUE]) {
 
 	n := heap.Len()
