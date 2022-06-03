@@ -26,6 +26,7 @@ type BlockQueue[V any] interface {
 	Queue[V]
 	BlockPop() (V, error)
 	Shutdown()
+	IsShutdown() bool
 }
 
 type DelayingQueue[V any] interface {
