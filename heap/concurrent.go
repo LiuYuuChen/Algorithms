@@ -87,7 +87,7 @@ func newConcurrentData[V any](lock sync.Locker, handler Constraint[string, V]) *
 	}
 }
 
-func (h *concurrentData[_]) Less(i, j int) bool {
+func (h *concurrentData[V]) Less(i, j int) bool {
 	if len(h.queue) < i || len(h.queue) < j {
 		return false
 	}
@@ -100,20 +100,20 @@ func (h *concurrentData[_]) Less(i, j int) bool {
 		return false
 	}
 
-	return h.priority.Less(itemI, itemJ)
+	return h.priority.Less(itemI.value, itemJ.value)
 }
 
-func (h *concurrentData[_]) Len() int {
+func (h *concurrentData[V]) Len() int {
 	return len(h.queue)
 }
 
-func (h *concurrentData[_]) Swap(i, j int) {
+func (h *concurrentData[V]) Swap(i, j int) {
 	h.lock.Lock()
 	h.queue[i], h.queue[j] = h.queue[j], h.queue[i]
 	h.lock.Unlock()
 	item, _ := h.items.Get(h.queue[i])
 	item.index = i
-	item, _ = h.items.Get(h.queue[i])
+	item, _ = h.items.Get(h.queue[j])
 	item.index = j
 }
 
