@@ -4,7 +4,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/algorithms/heap"
+	"github.com/LiuYuuChen/algorithms/heap"
 )
 
 type Queue[V any] interface {

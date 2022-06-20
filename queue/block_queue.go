@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/algorithms/heap"
+	"github.com/LiuYuuChen/algorithms/heap"
 )
 
 type blockQueue[V any] struct {
@@ -77,9 +77,7 @@ func (que *blockQueue[V]) List() []V {
 }
 
 func (que *blockQueue[V]) Pop() (V, error) {
-	v, err := que.heap.Pop()
-	que.cond.Broadcast()
-	return v, err
+	return que.BlockPop()
 }
 
 func (que *blockQueue[V]) BlockPop() (V, error) {

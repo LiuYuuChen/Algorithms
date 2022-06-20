@@ -17,6 +17,7 @@ func (heap *currentHeap[VALUE]) Add(value VALUE) {
 	key := heap.data.priority.FormStoreKey(value)
 	if item, exist := heap.data.items.Get(key); exist {
 		item.value = value
+		heap.data.items.Set(key, item)
 		Fix[VALUE](heap.data, item.index)
 		return
 	}
@@ -88,14 +89,19 @@ func newConcurrentData[V any](lock sync.Locker, handler Constraint[string, V]) *
 }
 
 func (h *concurrentData[V]) Less(i, j int) bool {
-	if len(h.queue) < i || len(h.queue) < j {
+	h.lock.Lock()
+	if len(h.queue) <= i || len(h.queue) <= j {
+		h.lock.Unlock()
 		return false
 	}
-	itemI, ok := h.items.Get(h.queue[i])
+	keyI, keyJ := h.queue[i], h.queue[j]
+	h.lock.Unlock()
+
+	itemI, ok := h.items.Get(keyI)
 	if !ok {
 		return false
 	}
-	itemJ, ok := h.items.Get(h.queue[j])
+	itemJ, ok := h.items.Get(keyJ)
 	if !ok {
 		return false
 	}
@@ -109,6 +115,10 @@ func (h *concurrentData[V]) Len() int {
 
 func (h *concurrentData[V]) Swap(i, j int) {
 	h.lock.Lock()
+	if len(h.queue) <= i || len(h.queue) <= j {
+		h.lock.Unlock()
+		return
+	}
 	h.queue[i], h.queue[j] = h.queue[j], h.queue[i]
 	h.lock.Unlock()
 	item, _ := h.items.Get(h.queue[i])
