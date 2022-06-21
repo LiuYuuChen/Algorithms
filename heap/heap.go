@@ -2,6 +2,7 @@ package heap
 
 import (
 	"fmt"
+	cmap "github.com/orcaman/concurrent-map"
 	"sync"
 )
 
@@ -167,6 +168,17 @@ func NewConcurrent[VALUE any](priority Constraint[string, VALUE], opts ...Option
 		data: &concurrentData[VALUE]{
 			lock:     cfg.lock,
 			priority: priority,
+			items:    cmap.New[*heapItem[VALUE]](),
+		},
+	}
+}
+
+func newConcurrent[VALUE any](priority Constraint[string, VALUE], cfg *options) *currentHeap[VALUE] {
+	return &currentHeap[VALUE]{
+		data: &concurrentData[VALUE]{
+			lock:     cfg.lock,
+			priority: priority,
+			items:    cmap.New[*heapItem[VALUE]](),
 		},
 	}
 }
