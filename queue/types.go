@@ -24,7 +24,6 @@ type HeapConstraint[VALUE any] interface {
 
 type BlockQueue[V any] interface {
 	Queue[V]
-	BlockPop() (V, error)
 	Shutdown()
 	IsShutdown() bool
 }
