@@ -105,6 +105,15 @@ func (q *delayingQueue[V]) Update(obj V) error {
 	return q.mainQueue.Update(obj)
 }
 
+func (q *delayingQueue[V]) Refresh(obj V) error {
+	item, ok := q.waitQueue.Get(newWaitFor[V](obj))
+	if ok {
+		item.value = obj
+		return nil
+	}
+	return q.mainQueue.Update(obj)
+}
+
 // Delete object from both main queue and wait queue.
 func (q *delayingQueue[V]) Delete(obj V) error {
 	item, ok := q.mainQueue.Get(obj)
