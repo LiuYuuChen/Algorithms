@@ -31,6 +31,7 @@ type BlockQueue[V any] interface {
 type DelayingQueue[V any] interface {
 	BlockQueue[V]
 	AddAfter(value V, duration time.Duration)
+	Refresh(obj V) error
 }
 
 type config struct {
