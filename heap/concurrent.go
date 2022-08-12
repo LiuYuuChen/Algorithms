@@ -120,11 +120,11 @@ func (h *concurrentData[V]) Swap(i, j int) {
 		return
 	}
 	h.queue[i], h.queue[j] = h.queue[j], h.queue[i]
-	h.lock.Unlock()
 	item, _ := h.items.Get(h.queue[i])
 	item.index = i
 	item, _ = h.items.Get(h.queue[j])
 	item.index = j
+	h.lock.Unlock()
 }
 
 // Pop returns the head of the heap and removes it.
