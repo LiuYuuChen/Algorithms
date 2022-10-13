@@ -77,6 +77,11 @@ func (q *delayingQueue[V]) AddAfter(item V, duration time.Duration) {
 	if q.IsShutdown() {
 		return
 	}
+
+	if _, ok := q.waitQueue.Get(newWaitFor[V](item)); ok {
+		_ = q.waitQueue.Delete(newWaitFor[V](item))
+	}
+
 	// immediately add things with no delay
 	if duration <= 0 {
 		q.mainQueue.Add(item)
@@ -93,6 +98,10 @@ func (q *delayingQueue[V]) AddAfter(item V, duration time.Duration) {
 }
 
 func (q *delayingQueue[V]) Add(value V) {
+	if item, ok := q.waitQueue.Get(newWaitFor[V](value)); ok {
+		item.value = value
+		return
+	}
 	q.mainQueue.Add(value)
 }
 
@@ -116,17 +125,25 @@ func (q *delayingQueue[V]) Refresh(obj V) error {
 
 // Delete object from both main queue and wait queue.
 func (q *delayingQueue[V]) Delete(obj V) error {
-	item, ok := q.mainQueue.Get(obj)
-	if ok {
-		return q.mainQueue.Delete(item)
+	item, existInMain := q.mainQueue.Get(obj)
+	queItem, existInWait := q.waitQueue.Get(newWaitFor[V](obj))
+
+	if !existInWait && !existInMain {
+		return fmt.Errorf("can not find item: %v in delaying queue", obj)
 	}
 
-	queItem, ok := q.waitQueue.Get(newWaitFor[V](obj))
-	if ok {
+	if existInMain {
+		err := q.mainQueue.Delete(item)
+		if err != nil {
+			return err
+		}
+	}
+
+	if existInWait {
 		return q.waitQueue.Delete(queItem)
 	}
 
-	return fmt.Errorf("can not find item: %v in delaying queue", obj)
+	return nil
 }
 
 func (q *delayingQueue[V]) List() []V {
