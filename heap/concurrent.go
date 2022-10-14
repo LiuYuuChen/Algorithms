@@ -129,6 +129,8 @@ func (h *concurrentData[V]) Swap(i, j int) {
 
 // Pop returns the head of the heap and removes it.
 func (h *concurrentData[VALUE]) Pop() (VALUE, error) {
+	h.lock.Lock()
+	defer h.lock.Unlock()
 	key := h.queue[len(h.queue)-1]
 	h.queue = h.queue[0 : len(h.queue)-1]
 	item, ok := h.items.Get(key)
@@ -141,11 +143,13 @@ func (h *concurrentData[VALUE]) Pop() (VALUE, error) {
 }
 
 func (h *concurrentData[VALUE]) Push(value VALUE) {
+	h.lock.Lock()
 	n := len(h.queue)
 	key := h.priority.FormStoreKey(value)
 	h2 := heapItem[VALUE]{index: n, value: value}
 	h.items.Set(key, &h2)
 	h.queue = append(h.queue, key)
+	h.lock.Unlock()
 }
 
 // Peek is supposed to be called by heap.Peek only.
