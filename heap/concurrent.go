@@ -129,6 +129,10 @@ func (h *concurrentData[V]) Swap(i, j int) {
 
 // Pop returns the head of the heap and removes it.
 func (h *concurrentData[VALUE]) Pop() (VALUE, error) {
+	if len(h.queue) == 0 {
+		var empty VALUE
+		return empty, fmt.Errorf("pop a empty heap")
+	}
 	h.lock.Lock()
 	defer h.lock.Unlock()
 	key := h.queue[len(h.queue)-1]

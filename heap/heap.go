@@ -58,6 +58,10 @@ func (h *data[_, _]) Swap(i, j int) {
 
 // Pop returns the head of the heap and removes it.
 func (h *data[_, VALUE]) Pop() (VALUE, error) {
+	if len(h.queue) == 0 {
+		var empty VALUE
+		return empty, fmt.Errorf("pop a empty heap")
+	}
 	key := h.queue[len(h.queue)-1]
 	h.queue = h.queue[0 : len(h.queue)-1]
 	item, ok := h.items[key]
