@@ -110,6 +110,8 @@ func (h *concurrentData[V]) Less(i, j int) bool {
 }
 
 func (h *concurrentData[V]) Len() int {
+	h.lock.Lock()
+	defer h.lock.Unlock()
 	return len(h.queue)
 }
 
@@ -129,12 +131,12 @@ func (h *concurrentData[V]) Swap(i, j int) {
 
 // Pop returns the head of the heap and removes it.
 func (h *concurrentData[VALUE]) Pop() (VALUE, error) {
+	h.lock.Lock()
+	defer h.lock.Unlock()
 	if len(h.queue) == 0 {
 		var empty VALUE
 		return empty, fmt.Errorf("pop a empty heap")
 	}
-	h.lock.Lock()
-	defer h.lock.Unlock()
 	key := h.queue[len(h.queue)-1]
 	h.queue = h.queue[0 : len(h.queue)-1]
 	item, ok := h.items.Get(key)
@@ -158,6 +160,8 @@ func (h *concurrentData[VALUE]) Push(value VALUE) {
 
 // Peek is supposed to be called by heap.Peek only.
 func (h *concurrentData[VALUE]) Peek() (VALUE, error) {
+	h.lock.Lock()
+	defer h.lock.Unlock()
 	var empty VALUE
 	if len(h.queue) > 0 {
 		item, ok := h.items.Get(h.queue[0])

@@ -7,6 +7,7 @@ require github.com/orcaman/concurrent-map v0.0.0-20220509071418-b1f44ce23724
 require (
 	github.com/sirupsen/logrus v1.8.1
 	github.com/smartystreets/goconvey v1.7.2
+	golang.org/x/time v0.2.0
 )
 
 require (
