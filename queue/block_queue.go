@@ -16,17 +16,13 @@ type blockQueue[V any] struct {
 	stopped   bool
 }
 
-func NewBlockQueue[V any](constraint HeapConstraint[V], opts ...Option) BlockQueue[V] {
-	cfg := &config{lock: &sync.Mutex{}}
-	for _, opt := range opts {
-		opt(cfg)
-	}
-	return newBlockQueue[V](constraint, cfg)
+func NewBlockQueue[V any](constraint HeapConstraint[V]) BlockQueue[V] {
+	return newBlockQueue[V](constraint)
 }
 
-func newBlockQueue[V any](constraint HeapConstraint[V], cfg *config) *blockQueue[V] {
+func newBlockQueue[V any](constraint HeapConstraint[V]) *blockQueue[V] {
 	return &blockQueue[V]{
-		cond: sync.NewCond(cfg.lock),
+		cond: sync.NewCond(&sync.RWMutex{}),
 		heap: heap.NewConcurrent[V](constraint),
 	}
 }
@@ -83,6 +79,7 @@ func (que *blockQueue[V]) Pop() (V, error) {
 func (que *blockQueue[V]) BlockPop() (V, error) {
 	que.cond.L.Lock()
 	defer que.cond.L.Unlock()
+BlockLoop:
 	for que.heap.Len() == 0 && !que.stopping {
 		que.cond.Wait()
 	}
@@ -97,7 +94,7 @@ func (que *blockQueue[V]) BlockPop() (V, error) {
 
 	item, err := que.heap.Pop()
 	if err != nil {
-		return *new(V), err
+		goto BlockLoop
 	}
 
 	return item, nil

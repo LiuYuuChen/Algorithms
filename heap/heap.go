@@ -10,14 +10,6 @@ type options struct {
 	lock sync.Locker
 }
 
-type Option func(opts *options)
-
-func WithLock(lock sync.Locker) Option {
-	return func(opts *options) {
-		opts.lock = lock
-	}
-}
-
 type heapItem[VALUE any] struct {
 	index int
 	value VALUE
@@ -162,25 +154,20 @@ func newHeap[KEY comparable, VALUE any](priority Constraint[KEY, VALUE]) *heap[K
 	}
 }
 
-func NewConcurrent[VALUE any](priority Constraint[string, VALUE], opts ...Option) Heap[VALUE] {
-	cfg := options{lock: &sync.RWMutex{}}
-	for _, opt := range opts {
-		opt(&cfg)
-	}
-
-	return &currentHeap[VALUE]{
+func NewConcurrent[VALUE any](priority Constraint[string, VALUE]) Heap[VALUE] {
+	return &concurrentHeap[VALUE]{
+		lock: &sync.RWMutex{},
 		data: &concurrentData[VALUE]{
-			lock:     cfg.lock,
 			priority: priority,
 			items:    cmap.New[*heapItem[VALUE]](),
 		},
 	}
 }
 
-func newConcurrent[VALUE any](priority Constraint[string, VALUE], cfg *options) *currentHeap[VALUE] {
-	return &currentHeap[VALUE]{
+func newConcurrent[VALUE any](priority Constraint[string, VALUE], cfg *options) *concurrentHeap[VALUE] {
+	return &concurrentHeap[VALUE]{
+		lock: &sync.RWMutex{},
 		data: &concurrentData[VALUE]{
-			lock:     cfg.lock,
 			priority: priority,
 			items:    cmap.New[*heapItem[VALUE]](),
 		},

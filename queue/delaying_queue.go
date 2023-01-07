@@ -51,18 +51,14 @@ type delayingQueue[V any] struct {
 	stop     bool
 }
 
-func NewDelayingQueue[V any](constraint HeapConstraint[V], opts ...Option) DelayingQueue[V] {
-	cfg := &config{lock: &sync.Mutex{}}
-	for _, opt := range opts {
-		opt(cfg)
-	}
-	return newDelayingQueue(constraint, cfg)
+func NewDelayingQueue[V any](constraint HeapConstraint[V]) DelayingQueue[V] {
+	return newDelayingQueue(constraint)
 }
 
-func newDelayingQueue[V any](constraint HeapConstraint[V], cfg *config) *delayingQueue[V] {
+func newDelayingQueue[V any](constraint HeapConstraint[V]) *delayingQueue[V] {
 	dQueue := &delayingQueue[V]{
-		mainQueue: newBlockQueue[V](constraint, cfg),
-		waitQueue: newBlockQueue[*waitFor[V]](&waitConstraintConvertor[V]{origin: constraint}, cfg),
+		mainQueue: newBlockQueue[V](constraint),
+		waitQueue: newBlockQueue[*waitFor[V]](&waitConstraintConvertor[V]{origin: constraint}),
 		heartbeat: time.NewTimer(maxWait),
 
 		waitingForAddCh: make(chan *waitFor[V], 1000),

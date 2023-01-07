@@ -28,8 +28,7 @@ func (t *testConstraint) Less(left, right *testItem) bool {
 }
 
 func Test_BasicBlockQueueFunction(t *testing.T) {
-	cfg := &config{lock: &sync.RWMutex{}}
-	queue := newBlockQueue[*testItem](&testConstraint{}, cfg)
+	queue := newBlockQueue[*testItem](&testConstraint{})
 	testItems := make([]*testItem, testItemNum)
 	for i := range testItems {
 		item := &testItem{
@@ -125,8 +124,7 @@ func Test_BasicBlockQueueFunction(t *testing.T) {
 }
 
 func Test_BlockQueueConcurrent(t *testing.T) {
-	cfg := &config{lock: &sync.RWMutex{}}
-	queue := newBlockQueue[*testItem](&testConstraint{}, cfg)
+	queue := newBlockQueue[*testItem](&testConstraint{})
 	testItems := make([]*testItem, testItemNum)
 	for i := range testItems {
 		item := &testItem{

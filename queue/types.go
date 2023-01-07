@@ -1,7 +1,6 @@
 package queue
 
 import (
-	"sync"
 	"time"
 
 	"github.com/LiuYuuChen/algorithms/heap"
@@ -32,16 +31,4 @@ type DelayingQueue[V any] interface {
 	BlockQueue[V]
 	AddAfter(value V, duration time.Duration)
 	Refresh(obj V) error
-}
-
-type config struct {
-	lock sync.Locker
-}
-
-type Option func(*config)
-
-func WithLocker(lock sync.Locker) Option {
-	return func(cfg *config) {
-		cfg.lock = lock
-	}
 }

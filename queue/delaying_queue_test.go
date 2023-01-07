@@ -2,7 +2,6 @@ package queue
 
 import (
 	"fmt"
-	"sync"
 	"testing"
 	"time"
 
@@ -10,8 +9,7 @@ import (
 )
 
 func TestDelayingQueue_MainQueueBasicFunction(t *testing.T) {
-	cfg := &config{lock: &sync.RWMutex{}}
-	queue := newDelayingQueue[*testItem](&testConstraint{}, cfg)
+	queue := newDelayingQueue[*testItem](&testConstraint{})
 	testItems := make([]*testItem, testItemNum)
 	for i := range testItems {
 		item := &testItem{
@@ -87,8 +85,7 @@ func TestDelayingQueue_MainQueueBasicFunction(t *testing.T) {
 }
 
 func TestDelayingQueue_DelayingQueueFunctions(t *testing.T) {
-	cfg := &config{lock: &sync.RWMutex{}}
-	queue := newDelayingQueue[*testItem](&testConstraint{}, cfg)
+	queue := newDelayingQueue[*testItem](&testConstraint{})
 	testItems := make([]*testItem, testItemNum)
 	for i := range testItems {
 		item := &testItem{
